@@ -1,0 +1,19 @@
+{
+  "name": "explorer-api",
+  "version": "0.0.0",
+  "description": "REST API for Explorer project",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo 'TODO: add tests' && exit 0;"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/grese/explorer-api.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/grese/explorer-api/issues"
+  },
+  "homepage": "https://github.com/grese/explorer-api#readme"
+}
