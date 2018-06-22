@@ -1,7 +1,7 @@
 
 const PORT = 8000;
 const api = require('./api');
-const bodyParser = require('body-parser')
+const bodyParser = require('body-parser');
 const {logger, expressLogger} = require('./logger');
 
 api.use(bodyParser.json());
