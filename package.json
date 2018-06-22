@@ -2,9 +2,11 @@
   "name": "explorer-api",
   "version": "0.0.0",
   "description": "REST API for Explorer project",
-  "main": "index.js",
+  "main": "server/index.js",
   "scripts": {
-    "test": "echo 'TODO: add tests' && exit 0;"
+    "server": "node server/index.js",
+    "test": "jest",
+    "lint": "./node_modules/.bin/eslint **/*.js --ignore-pattern node_modules/*"
   },
   "repository": {
     "type": "git",
@@ -15,5 +17,18 @@
   "bugs": {
     "url": "https://github.com/grese/explorer-api/issues"
   },
-  "homepage": "https://github.com/grese/explorer-api#readme"
+  "homepage": "https://github.com/grese/explorer-api#readme",
+  "devDependencies": {
+    "babel-cli": "^6.26.0",
+    "babel-preset-env": "^1.7.0",
+    "eslint": "^4.19.1",
+    "jest": "^23.1.0",
+    "superagent": "^3.8.3",
+    "supertest": "^3.1.0"
+  },
+  "dependencies": {
+    "express": "^4.16.3",
+    "express-winston": "^2.5.1",
+    "winston": "^2.4.3"
+  }
 }
