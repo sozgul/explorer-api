@@ -5,7 +5,7 @@ NodeJS REST API for the 'Explorer' project
 ## Development
 
 ### Pre-Requisites
-- Install [NodeJS](https://nodejs.org/en/download/) on your machine.
+- Install [NodeJS](https://nodejs.org/en/download/) *(version >= 8.x.x recommended)*
 
 ### Installation
 - `cd explorer-api`
