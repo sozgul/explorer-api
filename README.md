@@ -12,7 +12,7 @@ NodeJS REST API for the 'Explorer' project
 - `npm install`
 
 ### Running the server
-- `npm run server`
+- `npm run start`
 - The server will be running on http://localhost:8000
 
 ### Running Tests
