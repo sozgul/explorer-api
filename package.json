@@ -30,6 +30,7 @@
   "dependencies": {
     "express": "^4.16.3",
     "express-winston": "^2.5.1",
+    "libphonenumber-js": "^1.2.15",
     "winston": "^2.4.3"
   }
 }
