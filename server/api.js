@@ -4,8 +4,6 @@ const api = express();
 const phoneVerification = require('./phoneVerification');
 const bodyParser = require('body-parser');
 
-
-
 api.use(bodyParser.json());                           // to support JSON-encoded bodies
 api.use(bodyParser.urlencoded({ extended: true }));   // to support URL-encoded bodies
 

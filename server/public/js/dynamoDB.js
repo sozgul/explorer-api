@@ -81,17 +81,17 @@ function listUsersTables() {
 }
 
 
-function createItem() {
+function createNewUser() {
+    var newUserPhoneInfo = parsePhoneNumber();
+
     var params = {
         TableName :"Users",
         Item:{
-            "phone": "+14155552671",
-            "phoneLocalFormat": "4155552671",
-            "phoneCountryCode": "1",
-            "phoneValidationStatus": "0",
-            "phoneValidationCode": "1111",
-
-            "displayName": "John Smith"
+            "phone": newUserPhoneInfo.phone,
+            "phoneCountryCode": newUserPhoneInfo.countryCallingCode,
+            "phoneIsValidNumber": newUserPhoneInfo.valid,
+            "phoneVerificationStatus": "pending",
+            "country": newUserPhoneInfo.country
         }
     };
     docClient.put(params, function(err, data) {
@@ -103,14 +103,14 @@ function createItem() {
     });
 }
 
-function readItem() {
+function readUser() {
     var table = "Users";
-    var phone = "+14155552671";
+    var userPhoneInfo = parsePhoneNumber();
 
     var params = {
         TableName: table,
         Key:{
-            "phone": phone
+            "phone": userPhoneInfo.phone
         }
     };
     docClient.get(params, function(err, data) {
@@ -122,19 +122,19 @@ function readItem() {
     });
 }
 
-function updateItem() {
+function updateDisplayName() {
     var table = "Users";
-    var phone = "+14155552671";
+    var userPhoneInfo = parsePhoneNumber();
+    var userDisplayName = parseDisplayName();
 
     var params = {
         TableName:table,
         Key:{
-            "phone": phone
+            "phone": userPhoneInfo.phone
         },
-        UpdateExpression: "set displayName = :dN, phoneValidationStatus = :pV",
+        UpdateExpression: "set displayName = :dN",
         ExpressionAttributeValues:{
-            ":dN":"Agent Smith",
-            ":pV":"1"
+            ":dN":userDisplayName
         },
         ReturnValues:"UPDATED_NEW"
     };
@@ -148,14 +148,14 @@ function updateItem() {
     });
 }
 
-function deleteItem() {
+function deleteUser() {
     var table = "Users";
-    var phone = "+14155552671";
+    var userPhoneInfo = parsePhoneNumber();
     
     var params = {
         TableName:table,
         Key:{
-          "phone": phone
+          "phone": userPhoneInfo.phone
         }
     };
     docClient.delete(params, function(err, data) {

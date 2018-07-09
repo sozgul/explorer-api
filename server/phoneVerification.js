@@ -1,5 +1,6 @@
 var apiKey = "vc4ogg0yu39mN5P5dlmWUUHUvaqUSOuS";
 var phoneReg = require('./lib/phone_verification')(apiKey);
+const dynamoDB = require('./dynamoDB');
 
 /**
  * Register a phone
@@ -47,7 +48,8 @@ exports.verifyPhoneToken = function (req, res) {
           } else {
               console.log('Confirm phone success confirming code: ', response);
               if (response.success) {
-                  console.log("Verification successful");
+                  console.log("Verification successful, proceeding to create user");
+                  dynamoDB.createValidatedUser(req.body.phoneDetails);
               }
               res.status(200).json(err);
           }

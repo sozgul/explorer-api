@@ -5,6 +5,7 @@ var countryPhoneCodeInput;
 var countryPhoneCode;
 var phoneNumber;
 var verificationToken;
+var displayName;
 
 window.onload = function(e){ 
   console.log("window.onload", e, Date.now() ,window.tdiff);
@@ -12,6 +13,7 @@ window.onload = function(e){
   countryPhoneCodeInput = document.getElementById("CountryPhoneCode");
   phoneNumber = document.getElementById("PhoneNumber");
   verificationToken = document.getElementById("VerificationToken");
+  displayName = document.getElementById("DisplayName");
 }
 
 // function for CORS request on IP address as XML
@@ -109,7 +111,7 @@ function verifyPhoneToken(){
   console.log(countryPhoneCode);
   console.log(phoneNumber);
   console.log("+" + countryPhoneCode + phoneNumber.value);
-  var parsedPhoneNumber = libphonenumber.parseNumber("+" + countryPhoneCode + " " + phoneNumber.value, {extended: "true"});
+  var parsedPhoneNumber = parsePhoneNumber();
   console.log(parsedPhoneNumber);
   var parsedToken = verificationToken.value;
   if(parsedPhoneNumber.valid == true){
@@ -123,4 +125,12 @@ function verifyPhoneToken(){
     }));
   }
   return false;
+}
+
+function parsePhoneNumber(){
+  return libphonenumber.parseNumber("+" + countryPhoneCode + " " + phoneNumber.value, {extended: "true"});
+}
+
+function parseDisplayName(){
+  return displayName.value;
 }
