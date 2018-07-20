@@ -10,14 +10,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/grese/explorer-api.git"
+    "url": "git+https://github.com/CloudComputing/explorer-api.git"
   },
-  "author": "",
+  "author": "CMU CloudComputing - Team 3",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/grese/explorer-api/issues"
+    "url": "https://github.com/CloudComputing/explorer-api/issues"
   },
-  "homepage": "https://github.com/grese/explorer-api#readme",
+  "homepage": "https://github.com/CloudComputing/explorer-api#readme",
   "devDependencies": {
     "babel-cli": "^6.26.0",
     "babel-preset-env": "^1.7.0",
