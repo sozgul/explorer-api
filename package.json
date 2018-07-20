@@ -28,8 +28,10 @@
     "supertest": "^3.1.0"
   },
   "dependencies": {
+    "aws-sdk": "^2.270.1",
     "express": "^4.16.3",
     "express-winston": "^2.5.1",
+    "libphonenumber-js": "^1.2.15",
     "winston": "^2.4.3"
   }
 }

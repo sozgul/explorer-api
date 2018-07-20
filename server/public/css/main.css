@@ -1,0 +1,15 @@
+.Console {
+  position: relative;
+  background-color: #CCCCCC;
+  margin: 20px;
+  box-sizing: border-box;
+  padding: 20px;
+}
+
+.ApiConsole {
+  
+}
+
+.DatabaseConsole {
+
+}
