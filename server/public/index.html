@@ -7,14 +7,14 @@
 <link href="/css/main.css" rel="stylesheet" type="text/css"/>
 </head>
 
-<body> 
+<body>
 
 <div class="ApiConsole Console">
     <form onsubmit="return requestPhoneVerification()">
         <input id="CountryPhoneCode" placeholder="country code" oninput="handleCountryCodeChange()">
         <input id="PhoneNumber" type="tel" placeholder="phone number" oninput="handlePhoneNumberChange()">
         <input type="submit" value="send SMS">
-    </form> 
+    </form>
     <form onsubmit="return verifyPhoneToken()">
         <input id="VerificationToken" placeholder="SMS number">
         <input type="submit" value="verify">
