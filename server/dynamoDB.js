@@ -126,6 +126,7 @@ exports.readUser = function (phoneInfo) {
       logger.info('Unable to query. Error:', JSON.stringify(err, null, 2));
     } else {
       logger.info('Query succeeded.');
+      logger.info(data);
       if(data.Count > 0){
         data.Items.forEach(function(item) {
           logger.info('Found # on records: +', item.phoneCountryCode.S + ' ' + item.phone.S);
