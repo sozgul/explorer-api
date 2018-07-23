@@ -1,5 +1,6 @@
-const apiKey = 'vc4ogg0yu39mN5P5dlmWUUHUvaqUSOuS';
-const phoneReg = require('./lib/phone_verification')(apiKey);
+var config = require('./config.js');
+
+const phoneReg = require('./lib/phone_verification')(config.TWILIO_API_KEY);
 const dynamoDB = require('./dynamoDB');
 const {logger} = require('./logger');
 /**
@@ -59,3 +60,4 @@ exports.verifyPhoneToken = function (req, res) {
     res.status(500).json({error: 'Missing fields'});
   }
 };
+

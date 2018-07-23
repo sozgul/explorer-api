@@ -4,14 +4,10 @@ const api = express();
 const phoneVerification = require('./phoneVerification');
 const bodyParser = require('body-parser');
 const {logger} = require('./logger');
+const dynamoDB = require('./dynamoDB');
 
 api.use(bodyParser.json());                           // to support JSON-encoded bodies
 api.use(bodyParser.urlencoded({ extended: true }));   // to support URL-encoded bodies
-
-api.post('/users', (req, res) => {
-  logger.info('ExplorerAPI has received posty request to /users route');
-  res.status(200).send('ExplorerAPI has received post request to /users route');
-});
 
 api.post('/request-verification', (req, res) => {
   logger.info('ExplorerAPI received request to /verify route');
@@ -23,10 +19,24 @@ api.post('/verify-token', (req, res) => {
   phoneVerification.verifyPhoneToken(req, res);
 });
 
-api.use(express.static(path.join(__dirname, 'public')));
+api.post('/users', (req, res) => {
+  logger.info('ExplorerAPI received request to create draft user');
+  dynamoDB.createDraftUser(req.body.phoneDetails);
+  res.status(200).send('ExplorerAPI has received post request to /users route');
+});
 
-// api.get('/', (req, res) => {
-//   res.status(200).send('ExplorerAPI is running');
-// });
+api.post('/search', function (req, res) {
+  logger.info('Searching Users with phone details:');
+  dynamoDB.readUser(req.body.phoneDetails);
+  res.status(200).send('ExplorerAPI has received post request to /search route');
+});
+
+api.post('/settings', function (req, res) {
+  logger.info('Updating user with received settings:');
+  dynamoDB.updateUserSettings(req.body.phoneDetails, req.body.settings);
+  res.status(200).send('ExplorerAPI has received post request to /settings route');
+});
+
+api.use(express.static(path.join(__dirname, 'public')));
 
 module.exports = api;

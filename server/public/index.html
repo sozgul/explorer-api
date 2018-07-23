@@ -19,7 +19,7 @@
         <input id="VerificationToken" placeholder="SMS number">
         <input type="submit" value="verify">
     </form>
-    <form onsubmit="return updateSettings()">
+    <form onsubmit="return updateUser()">
         <input id="DisplayName" placeholder="Display name">
         <input type="submit" value="update details">
     </form>
@@ -39,7 +39,7 @@
             <table border = 1>
                 <caption>CRUD Operations</caption>
                 <td><input id="createNewUser" type="button" value="Create Item" onclick="createNewUser();" /></td>
-                <td><input id="readUser" type="button" value="Read Item" onclick="readUser();" /></td>
+                <td><input id="readUser" type="button" value="Read Item" onclick="return readUser();" /></td>
                 <td><input id="updateDisplayName" type="button" value="Update Display Name" onclick="updateDisplayName();" /></td>
                 <td><input id="deleteUser" type="button" value="Delete User" onclick="deleteUser();" /></td>
             </table>
