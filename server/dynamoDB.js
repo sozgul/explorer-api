@@ -113,12 +113,8 @@ exports.readUser = function (phoneInfo) {
 
   const params = {
     TableName : 'Users',
-    ProjectionExpression: '#phoneCountryCode, #phone',
-    KeyConditionExpression: '#phoneCountryCode = :countryCallingCode and #phone = :nationalNumber',
-    ExpressionAttributeNames:{
-      '#phoneCountryCode': 'phoneCountryCode',
-      '#phone': 'phone'
-    },
+    ProjectionExpression: 'phoneCountryCode, phone, userid, displayName',
+    KeyConditionExpression: 'phoneCountryCode = :countryCallingCode and phone = :nationalNumber',
     ExpressionAttributeValues: {
       ':countryCallingCode': { 'S': phoneInfo.countryCallingCode },  
       ':nationalNumber': { 'S': phoneInfo.phone }
@@ -130,10 +126,11 @@ exports.readUser = function (phoneInfo) {
       logger.info('Unable to query. Error:', JSON.stringify(err, null, 2));
     } else {
       logger.info('Query succeeded.');
-      logger.info(data);
       if(data.Count > 0){
         data.Items.forEach(function(item) {
           logger.info('Found # on records: +', item.phoneCountryCode.S + ' ' + item.phone.S);
+          logger.info('Associated user ID: ', item.userid.S );
+          logger.info('Associated user Display Name: ', item.displayName.S );
         });
       } else {
         logger.info('No recorded # matches: +', phoneInfo.countryCallingCode + ' ' + phoneInfo.phone);
@@ -156,13 +153,14 @@ exports.updateUserSettings = function (phoneInfo, settingsInfo) {
     Key:{
       'phone': {
         S: phoneInfo.phone
+      },
+      'phoneCountryCode': {
+        S: phoneInfo.countryCallingCode
       }
     },
     UpdateExpression: 'set displayName = :dN',
     ExpressionAttributeValues:{
-      ':dN': {
-        S: settingsInfo.displayName
-      }
+      ':dN': { S: settingsInfo.displayName }
     },
     ReturnValues: 'UPDATED_NEW'
   };
