@@ -1,6 +1,6 @@
 module.exports = {
   PORT: process.env.PORT,
-  TWILIO_API_KEY: 'vc4ogg0yu39mN5P5dlmWUUHUvaqUSOuS',
+  TWILIO_API_KEY: 'B6w3AMClVHE5YR87CTL4nPg81V6Y1DF9',
   SECRET: 'SUPERSECRE'
 };
 
