@@ -62,4 +62,4 @@ typings/
 .next
 
 # config variables 
-config.js
+server/config.js

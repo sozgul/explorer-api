@@ -60,7 +60,7 @@ exports.createNewUser = function (phoneInfo, verificationStatus) {
     TableName :'Users',
     Item:{
       'userid': {
-        S: 'user-' + uuid.v4()
+        S: 'U-' + uuid.v4()
       },
       'phone': {
         S: newUserPhoneInfo.phone
@@ -93,19 +93,52 @@ exports.createNewUser = function (phoneInfo, verificationStatus) {
  *
  */
 exports.readUser = function (phoneInfo) {
+  // const params = {
+  //   TableName :'Users',
+  //   Key:{
+  //     'phone': {
+  //       S: phoneInfo.phone
+  //     }
+  //   }
+  // };
+  // dynamodb.getItem(params, function(err, data) {
+  //   if (err) {
+  //     logger.info('Unable to get item: ' + '\n' + JSON.stringify(err, undefined, 2));
+  //   } else {
+  //     logger.info('Get item succeeded: ' + '\n' + JSON.stringify(data, undefined, 2));
+  //   }
+  // });
+
+  logger.info(phoneInfo);
+
   const params = {
-    TableName :'Users',
-    Key:{
-      'phone': {
-        S: phoneInfo.phone
-      }
+    TableName : 'Users',
+    ProjectionExpression: '#phoneCountryCode, #phone',
+    KeyConditionExpression: '#phoneCountryCode = :countryCallingCode and #phone = :nationalNumber',
+    ExpressionAttributeNames:{
+      '#phoneCountryCode': 'phoneCountryCode',
+      '#phone': 'phone'
+    },
+    ExpressionAttributeValues: {
+      ':countryCallingCode': { 'S': phoneInfo.countryCallingCode },  
+      ':nationalNumber': { 'S': phoneInfo.phone }
     }
   };
-  dynamodb.getItem(params, function(err, data) {
+
+  dynamodb.query(params, function(err, data) {
     if (err) {
-      logger.info('Unable to get item: ' + '\n' + JSON.stringify(err, undefined, 2));
+      logger.info('Unable to query. Error:', JSON.stringify(err, null, 2));
     } else {
-      logger.info('Get item succeeded: ' + '\n' + JSON.stringify(data, undefined, 2));
+      logger.info('Query succeeded.');
+      logger.info(data);
+      if(data.Count > 0){
+        data.Items.forEach(function(item) {
+          logger.info('Found # on records: +', item.phoneCountryCode.S + ' ' + item.phone.S);
+        });
+      } else {
+        logger.info('No recorded # matches: +', phoneInfo.countryCallingCode + ' ' + phoneInfo.phone);
+      }
+      
     }
   });
 };

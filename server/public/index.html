@@ -9,8 +9,8 @@
 
 <body>
 
-<div class="ApiConsole Console">
-    <form onsubmit="return requestPhoneVerification()">
+<div class="Console">
+    <form onsubmit="return createDraftUser()">
         <input id="CountryPhoneCode" placeholder="country code" oninput="handleCountryCodeChange()">
         <input id="PhoneNumber" type="tel" placeholder="phone number" oninput="handlePhoneNumberChange()">
         <input type="submit" value="send SMS">
@@ -23,31 +23,8 @@
         <input id="DisplayName" placeholder="Display name">
         <input type="submit" value="update details">
     </form>
+    <input id="readUser" type="button" value="Read Item" onclick="return readUser();"/>
 </div>
 
-<div class="DatabaseConsole Console">
-    <table border = 1>
-        <td>
-            <table border = 1>
-            <caption>Table Operations</caption>
-            <td><input id="createTableButton" type="button" value="Create Table" onclick="createUsersTable();" /></td>
-            <td><input id="deleteTableButton" type="button" value="Delete Table" onclick="deleteUsersTable();" /></td>
-            <td><input id="listTablebutton" type="button" value="List Tables" onclick="listUsersTables();" /></td>
-            </table>
-        </td>
-        <td>
-            <table border = 1>
-                <caption>CRUD Operations</caption>
-                <td><input id="createNewUser" type="button" value="Create Item" onclick="createNewUser();" /></td>
-                <td><input id="readUser" type="button" value="Read Item" onclick="return readUser();" /></td>
-                <td><input id="updateDisplayName" type="button" value="Update Display Name" onclick="updateDisplayName();" /></td>
-                <td><input id="deleteUser" type="button" value="Delete User" onclick="deleteUser();" /></td>
-            </table>
-        </td>
-    </table>
-
-    <br>
-    <textarea readonly id= "textarea" style="width:400px; height:800px"></textarea>
-</div>
 </body>
 </html>
