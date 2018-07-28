@@ -92,11 +92,7 @@ function handlePhoneNumberChange(){
 
 // eslint-disable-next-line no-unused-vars
 function requestPhoneVerification(){
-  console.log('### PHONE INFORMATION ###');
-  console.log(countryCode);
-  console.log(countryPhoneCode);
-  console.log(phoneNumber);
-  console.log('+' + countryPhoneCode + phoneNumber.value);
+  console.log('### INPUT PHONE INFORMATION ###');
   var parsedPhoneNumber = libphonenumber.parseNumber('+' + countryPhoneCode + ' ' + phoneNumber.value, {extended: 'true'});
   console.log(parsedPhoneNumber);
   if(parsedPhoneNumber.valid == true){
@@ -113,11 +109,7 @@ function requestPhoneVerification(){
 
 // eslint-disable-next-line no-unused-vars
 function verifyPhoneToken(){
-  console.log('### PHONE INFORMATION ###');
-  console.log(countryCode);
-  console.log(countryPhoneCode);
-  console.log(phoneNumber);
-  console.log('+' + countryPhoneCode + phoneNumber.value);
+  console.log('### INPUT PHONE INFORMATION ###');
   var parsedPhoneNumber = parsePhoneNumber();
   console.log(parsedPhoneNumber);
   var parsedToken = verificationToken.value;
@@ -141,4 +133,59 @@ function parsePhoneNumber(){
 // eslint-disable-next-line no-unused-vars
 function parseDisplayName(){
   return displayName.value;
+}
+
+// eslint-disable-next-line no-unused-vars
+function createDraftUser(){
+  console.log('### INPUT PHONE INFORMATION ###');
+  var parsedPhoneNumber = libphonenumber.parseNumber('+' + countryPhoneCode + ' ' + phoneNumber.value, {extended: 'true'});
+  console.log(parsedPhoneNumber);
+  if(parsedPhoneNumber.valid == true){
+    // post to request phone verification
+    var xhr = new XMLHttpRequest();
+    xhr.open('POST', '/users', true);
+    xhr.setRequestHeader('Content-Type', 'application/json');
+    xhr.send(JSON.stringify({
+      phoneDetails: parsedPhoneNumber
+    }));
+  }
+  return false;
+}
+
+
+// eslint-disable-next-line no-unused-vars
+function readUser(){
+  console.log('### INPUT PHONE INFORMATION ###');
+  var parsedPhoneNumber = libphonenumber.parseNumber('+' + countryPhoneCode + ' ' + phoneNumber.value, {extended: 'true'});
+  console.log(parsedPhoneNumber);
+  if(parsedPhoneNumber.valid == true){
+    // post to request phone verification
+    var xhr = new XMLHttpRequest();
+    xhr.open('POST', '/search', true);
+    xhr.setRequestHeader('Content-Type', 'application/json');
+    xhr.send(JSON.stringify({
+      phoneDetails: parsedPhoneNumber
+    }));
+  }
+  return false;
+}
+
+// eslint-disable-next-line no-unused-vars
+function updateUser(){
+  console.log('### INPUT PROFILE INFORMATION ###');
+  var parsedDisplayName = displayName.value;
+  var parsedPhoneNumber = libphonenumber.parseNumber('+' + countryPhoneCode + ' ' + phoneNumber.value, {extended: 'true'});
+  console.log(parsedDisplayName);
+  if(parsedDisplayName != ''){
+    // post to request phone verification
+    var xhr = new XMLHttpRequest();
+    xhr.open('POST', '/settings', true);
+    xhr.setRequestHeader('Content-Type', 'application/json');
+    xhr.send(JSON.stringify({
+      phoneDetails: parsedPhoneNumber,
+      settings: { displayName: parsedDisplayName }
+    }));
+  }
+  return false;
+
 }

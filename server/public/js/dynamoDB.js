@@ -2,15 +2,15 @@
 /* global AWS, document, parsePhoneNumber, parseDisplayName */
 
 AWS.config.update({
-  region: 'us-west-2',
+  region: 'us-east-1',
   // The endpoint should point to the local or remote computer where DynamoDB (downloadable) is running.
-  endpoint: 'http://localhost:8000',
+  endpoint: 'https://dynamodb.us-east-1.amazonaws.com',
   /*
     accessKeyId and secretAccessKey defaults can be used while using the downloadable version of DynamoDB.
     For security reasons, do not store AWS Credentials in your files. Use Amazon Cognito instead.
   */
-  accessKeyId: 'fakeMyKeyId',
-  secretAccessKey: 'fakeSecretAccessKey'
+  // accessKeyId: 'fakeMyKeyId',
+  // secretAccessKey: 'fakeSecretAccessKey'
 });
 
 /*
