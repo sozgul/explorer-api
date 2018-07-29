@@ -18,10 +18,12 @@ exports.requestPhoneVerification = function (req, res) {
     phoneReg.requestPhoneVerification(phone_number, country_code, via, function (err, response) {
       if (err) {
         logger.info('error creating phone reg request', err);
-        res.status(500).json(err);
+        res.status(400).json(err);
       } else {
         logger.info('Success register phone API call: ', response);
         res.status(200).json(response);
+        logger.info('API response:');
+        logger.info(response);
       }
     });
   } else {
@@ -50,9 +52,13 @@ exports.verifyPhoneToken = function (req, res) {
         logger.info('Confirm phone success confirming code: ', response);
         if (response.success) {
           logger.info('Verification successful, proceeding to create user');
-          dynamoDB.createValidatedUser(req.body.phoneDetails);
+          var result = dynamoDB.createValidatedUser(req.body.phoneDetails);
+          logger.info('API response:');
+          logger.info(result);
+          res.status(200).send(result);
+        } else {
+          res.status(400).json(err);
         }
-        res.status(200).json(err);
       }
     });
   } else {
