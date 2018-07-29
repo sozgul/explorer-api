@@ -10,7 +10,7 @@ api.use(bodyParser.json());                           // to support JSON-encoded
 api.use(bodyParser.urlencoded({ extended: true }));   // to support URL-encoded bodies
 
 api.post('/request-verification', (req, res) => {
-  logger.info('ExplorerAPI received request to /verify route');
+  logger.info('ExplorerAPI received request to /request-verification route');
   phoneVerification.requestPhoneVerification(req, res);
 });
 
@@ -21,20 +21,17 @@ api.post('/verify-token', (req, res) => {
 
 api.post('/users', (req, res) => {
   logger.info('ExplorerAPI received request to create draft user');
-  dynamoDB.createDraftUser(req.body.phoneDetails);
-  res.status(200).send('ExplorerAPI has received post request to /users route');
+  dynamoDB.createDraftUser(req, res);
 });
 
 api.post('/search', function (req, res) {
   logger.info('Searching Users with phone details:');
-  dynamoDB.readUser(req.body.phoneDetails);
-  res.status(200).send('ExplorerAPI has received post request to /search route');
+  dynamoDB.readUser(req, res);
 });
 
 api.post('/settings', function (req, res) {
   logger.info('Updating user with received settings:');
-  dynamoDB.updateUserSettings(req.body.phoneDetails, req.body.settings);
-  res.status(200).send('ExplorerAPI has received post request to /settings route');
+  dynamoDB.updateUserSettings(req, res);
 });
 
 api.use(express.static(path.join(__dirname, 'public')));
