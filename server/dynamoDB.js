@@ -80,10 +80,11 @@ exports.createValidatedUser = function (req, res) {
   const newUserPhoneInfo = req.body.phoneDetails;
   logger.info(newUserPhoneInfo);
   var completePhoneNumber = newUserPhoneInfo.countryCallingCode + newUserPhoneInfo.phone;
+  var generatedID = uuid.v4();
 
   var newUser = new User({
     phone: completePhoneNumber,
-    userid: uuid.v4(),
+    userid: generatedID,
     nationalPhoneNumber: newUserPhoneInfo.phone,
     countryCallingCode: newUserPhoneInfo.countryCallingCode,
     phoneIsValidNumber: String(newUserPhoneInfo.valid),
@@ -106,7 +107,8 @@ exports.createValidatedUser = function (req, res) {
         status: 'authenticated',
         phone: completePhoneNumber,
         accessToken: accessToken,
-        refreshToken: refreshToken
+        refreshToken: refreshToken,
+        userid: generatedID
       };
 
       //refreshTokens[refreshToken] = response; 
@@ -163,7 +165,8 @@ exports.createDraftUser = function (req, res) {
         status: 'authenticated',
         phone: completePhoneNumber,
         accessToken: accessToken,
-        refreshToken: refreshToken
+        refreshToken: refreshToken,
+        userid: generatedID
       };
 
       //refreshTokens[refreshToken] = response; 
