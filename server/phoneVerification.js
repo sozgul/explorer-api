@@ -1,5 +1,4 @@
-var config = require('./config.js');
-
+const {parsed: config = {}} = require('dotenv').config();
 const phoneReg = require('./lib/phone_verification')(config.TWILIO_API_KEY);
 const dynamoDB = require('./dynamoDB');
 const {logger} = require('./logger');
