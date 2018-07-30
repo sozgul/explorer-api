@@ -7,7 +7,7 @@ const accessTokenSecret = 'SUPER_SECRET_ACCESS_KEY'; //normally stored in proces
 const refreshTokenSecret = 'SUPER_SECRET_REFRESH_KEY'; //normally stored in process.env.secret
 const accessTokenLifetime = 300;
 const refreshTokenLifetime = 604800;
-var refreshTokens = {}; 
+//var refreshTokens = {}; 
 
 /* Dynamoose Configuration */
 dynamoose.setDefaults({
@@ -103,15 +103,26 @@ exports.createValidatedUser = function (req, res) {
       const refreshToken = jwt.sign({ completePhoneNumber}, refreshTokenSecret, {expiresIn: refreshTokenLifetime});
 
       var response = {
-        'status': 'authenticated',
-        'phone': completePhoneNumber,
-        'token': accessToken,
-        'refreshToken': refreshToken
+        status: 'authenticated',
+        phone: completePhoneNumber,
+        accessToken: accessToken,
+        refreshToken: refreshToken
       };
 
-      refreshTokens[refreshToken] = response; 
+      //refreshTokens[refreshToken] = response; 
 
-      return res.status(200).json(response);
+      var newRefreshToken = new RefreshToken(response);
+
+      newRefreshToken.save(function (err, data) {
+        if(err) {
+          logger.info(err); 
+          return res.status(500).json(err);
+        } else {
+          logger.info('New refresh token successfully saved');
+          logger.info(data);
+          return res.status(200).json(response);
+        }
+      });   
     }
   });
 };
@@ -149,15 +160,26 @@ exports.createDraftUser = function (req, res) {
       const refreshToken = jwt.sign({ completePhoneNumber}, refreshTokenSecret, {expiresIn: refreshTokenLifetime});
 
       var response = {
-        'status': 'authenticated',
-        'phone': completePhoneNumber,
-        'token': accessToken,
-        'refreshToken': refreshToken
+        status: 'authenticated',
+        phone: completePhoneNumber,
+        accessToken: accessToken,
+        refreshToken: refreshToken
       };
 
-      refreshTokens[refreshToken] = response; 
+      //refreshTokens[refreshToken] = response; 
 
-      return res.status(200).json(response);
+      var newRefreshToken = new RefreshToken(response);
+
+      newRefreshToken.save(function (err, data) {
+        if(err) {
+          logger.info(err); 
+          return res.status(500).json(err);
+        } else {
+          logger.info('New refresh token successfully saved');
+          logger.info(data);
+          return res.status(200).json(response);
+        }
+      });   
     }
   });
 
@@ -212,10 +234,16 @@ exports.readUser = function (req, res) {
         logger.info('Error while getting user: ' + err);
       } else {
         logger.info('Query completed ');
-        logger.info('API response:');
-        logger.info(queryResult);
-        res.status(200).send(queryResult);
-        return queryResult;
+        if(queryResult == null){
+          logger.info('No user record found with given details');
+          res.send(404);
+        } else {
+          logger.info('API response:');
+          logger.info(queryResult);
+          res.status(200).send(queryResult);
+          return queryResult;
+        }
+        
       }
     });
 
@@ -252,24 +280,30 @@ exports.updateUserSettings = function (req, res) {
       if(err){
         logger.info('Error while getting user: ' + err);
       } else {
-        logger.info('Retrieval successful: ');
-        logger.info(queryResult);
+        logger.info('Query completed ');
+        if(queryResult == null){
+          logger.info('No user record found with given details');
+          res.send(404);
+        } else {
+          logger.info('Retrieval successful: ');
+          logger.info(queryResult);
 
-        logger.info('Proceeding to update with the following settings: ');
-        logger.info(settingsInfo);
+          logger.info('Proceeding to update with the following settings: ');
+          logger.info(settingsInfo);
 
-        queryResult.displayName = settingsInfo.displayName;
-        queryResult.save(function (err, data) {
-          if(err) { 
-            return logger.info(err); 
-          } else {
-            logger.info('User updated succesfully');
-            logger.info('API response:');
-            logger.info(data);
-            res.status(200).send(data);
-            return data;
-          }
-        });
+          queryResult.displayName = settingsInfo.displayName;
+          queryResult.save(function (err, data) {
+            if(err) { 
+              return logger.info(err); 
+            } else {
+              logger.info('User updated succesfully');
+              logger.info('API response:');
+              logger.info(data);
+              res.status(200).send(data);
+              return data;
+            }
+          });
+        }     
       }
     });
 
@@ -297,21 +331,17 @@ exports.updateUserSettings = function (req, res) {
 
 // TOKEN INFRASTRUCTURE
 
-// var tokenSchema = new dynamoose.Schema({
-//   phone: {
-//     type: String,
-//     hashKey: true
-//   },
-//   userid: String,
-//   country: String,
-//   nationalPhoneNumber: String,
-//   countryCallingCode: String,
-//   phoneIsValidNumber: String,
-//   phoneVerificationStatus: String,
-//   displayName: String
-// });
+var refreshTokenSchema = new dynamoose.Schema({
+  refreshToken: {
+    type: String,
+    hashKey: true
+  },
+  accessToken: String,
+  phone: String,
+  status: String
+});
 
-// var Token = dynamoose.model('User', tokenSchema);
+var RefreshToken = dynamoose.model('RefreshToken', refreshTokenSchema);
 
 
 /**
@@ -322,14 +352,49 @@ exports.checkRefreshToken = function (req, res) {
   var phoneInfo = req.body.phoneDetails;
   var refreshToken = req.body.refreshToken;
   var completePhoneNumber = phoneInfo.countryCallingCode + phoneInfo.phone;
+
+  logger.info('Checking db for refresh token associated with: ' + completePhoneNumber);
+  RefreshToken.get(refreshToken, // this is the table key 
+    function (err, queryResult) {
+      if(err){
+        logger.info('Error while getting refresh token: ' + err);
+      } else {
+        logger.info('Refresh token retrieved successfully: ');
+        logger.info(queryResult);
+
+        if(queryResult != null) {
+          if(queryResult.phone == completePhoneNumber){
+            logger.info('Number matches, proceeding to renew the refresh token: ');
+            const newAccessToken = jwt.sign({ phone: completePhoneNumber }, accessTokenSecret, {expiresIn: accessTokenLifetime});
+            queryResult.accessToken = newAccessToken;
+            queryResult.save(function (err, data) {
+              if(err) { 
+                logger.info('Save failed, unable to update refresh token'); 
+                logger.info(err); 
+                return res.status(401).send(err);
+              } else {
+                logger.info('Refresh token updated succesfully');
+                logger.info('API response:');
+                logger.info(data);
+                return res.status(200).send(newAccessToken);
+              }
+            });
+          }
+        }
+        else {
+          logger.info('No refresh token record found with given details');
+          res.send(404);
+        }
+      }
+    });
   
-  if( (refreshToken in refreshTokens) && refreshTokens[refreshToken].phone == completePhoneNumber ) {
-    const newAccessToken = jwt.sign({ phone: completePhoneNumber }, accessTokenSecret, {expiresIn: accessTokenLifetime});
-    refreshTokens[refreshToken].token = newAccessToken;
-    res.json({token: newAccessToken});
-  } else {
-    res.send(401);
-  }
+  // if( (refreshToken in refreshTokens) && refreshTokens[refreshToken].phone == completePhoneNumber ) {
+  //   const newAccessToken = jwt.sign({ phone: completePhoneNumber }, accessTokenSecret, {expiresIn: accessTokenLifetime});
+  //   refreshTokens[refreshToken].token = newAccessToken;
+  //   res.json({token: newAccessToken});
+  // } else {
+  //   res.send(401);
+  // }
 };
 
 /**
@@ -338,9 +403,13 @@ exports.checkRefreshToken = function (req, res) {
  */
 exports.revokeRefreshToken = function (req, res) {
   var refreshToken = req.body.refreshToken;
-  if(refreshToken in refreshTokens) { 
-    delete refreshTokens[refreshToken];
-  } 
-  res.send(204);
+  logger.info('Received revoke request for refresh token');
+  RefreshToken.delete(refreshToken, function(err){
+    if(err){
+      return res.status(500).json(err);
+    } else {
+      logger.info('Refresh token revoked succesfully');
+      return res.send(204);
+    }
+  });
 };
-
