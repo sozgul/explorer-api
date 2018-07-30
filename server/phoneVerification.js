@@ -1,7 +1,8 @@
-const {parsed: config = {}} = require('dotenv').config();
-const phoneReg = require('./lib/phone_verification')(config.TWILIO_API_KEY);
+const phoneReg = require('./lib/phoneVerification/phoneVerification')(process.env.TWILIO_API_KEY);
 const dynamoDB = require('./dynamoDB');
 const {logger} = require('./logger');
+
+
 /**
  * Register a phone
  *
@@ -51,12 +52,9 @@ exports.verifyPhoneToken = function (req, res) {
         logger.info('Confirm phone success confirming code: ', response);
         if (response.success) {
           logger.info('Verification successful, proceeding to create user');
-          var result = dynamoDB.createValidatedUser(req.body.phoneDetails);
-          logger.info('API response:');
-          logger.info(result);
-          res.status(200).send(result);
+          dynamoDB.createValidatedUser(req, res);
         } else {
-          res.status(400).json(err);
+          res.status(401).json(err);
         }
       }
     });

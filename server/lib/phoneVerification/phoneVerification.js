@@ -1,5 +1,5 @@
 
-const {logger} = require('../logger');
+const {logger} = require('../../logger');
 const request = require('request');
 const VERSION = '0.1';
 

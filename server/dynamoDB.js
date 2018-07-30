@@ -1,7 +1,13 @@
 const {logger} = require('./logger');
 const AWS = require('aws-sdk');
-var uuid = require('uuid');
-var dynamoose = require('dynamoose');
+const uuid = require('uuid');
+const dynamoose = require('dynamoose');
+const jwt = require('jsonwebtoken');
+const accessTokenSecret = 'SUPER_SECRET_ACCESS_KEY'; //normally stored in process.env.secret
+const refreshTokenSecret = 'SUPER_SECRET_REFRESH_KEY'; //normally stored in process.env.secret
+const accessTokenLifetime = 300;
+const refreshTokenLifetime = 604800;
+//var refreshTokens = {}; 
 
 /* Dynamoose Configuration */
 dynamoose.setDefaults({
@@ -12,23 +18,23 @@ dynamoose.setDefaults({
   suffix: ''
 });
 /* Comment out the line below for use in production */
-dynamoose.local('http://localhost:8000');
+//dynamoose.local('http://localhost:8000');
 
 /* AWS Configuration */
 AWS.config.update({
   region: 'us-east-1',
   // The endpoint should point to the local or remote computer where DynamoDB (downloadable) is running.
   /* Comment out the line below for use in production */
-  endpoint: 'http://localhost:8000',
+  //endpoint: 'http://localhost:8000',
   /* Comment out the line below for use in local development */
-  // endpoint: 'https://dynamodb.us-east-1.amazonaws.com',
+  endpoint: 'https://dynamodb.us-east-1.amazonaws.com'
   /*
     accessKeyId and secretAccessKey defaults can be used while using the downloadable version of DynamoDB. 
     For security reasons, do not store AWS Credentials in your files. Use Amazon Cognito instead.
     Comment out the credentials below for production use
   */
-  accessKeyId: 'fakeMyKeyId',
-  secretAccessKey: 'fakeSecretAccessKey'
+  //accessKeyId: 'fakeMyKeyId',
+  //secretAccessKey: 'fakeSecretAccessKey'
 });
 /*
    Uncomment the following code to configure Amazon Cognito and make sure to
@@ -65,22 +71,23 @@ var userSchema = new dynamoose.Schema({
 
 var User = dynamoose.model('User', userSchema);
 
+
 /**
- * Create new user 
+ * Create new user with validated phone number
  *
  */
-exports.createNewUser = function (req, res, verificationStatus) {
-  var phoneInfo = req.body.phoneDetails;
-  const newUserPhoneInfo = phoneInfo;
-  logger.info(phoneInfo);
+exports.createValidatedUser = function (req, res) {
+  const newUserPhoneInfo = req.body.phoneDetails;
+  logger.info(newUserPhoneInfo);
+  var completePhoneNumber = newUserPhoneInfo.countryCallingCode + newUserPhoneInfo.phone;
 
   var newUser = new User({
-    phone: newUserPhoneInfo.countryCallingCode + newUserPhoneInfo.phone,
+    phone: completePhoneNumber,
     userid: uuid.v4(),
     nationalPhoneNumber: newUserPhoneInfo.phone,
     countryCallingCode: newUserPhoneInfo.countryCallingCode,
     phoneIsValidNumber: String(newUserPhoneInfo.valid),
-    phoneVerificationStatus: verificationStatus,
+    phoneVerificationStatus: 'unverified',
     country: newUserPhoneInfo.country
   });
 
@@ -91,11 +98,91 @@ exports.createNewUser = function (req, res, verificationStatus) {
       logger.info('New user successfully saved');
       logger.info('API response:');
       logger.info(data);
-      res.status(200).json(data);
-      return data;
+      
+      const accessToken = jwt.sign({ completePhoneNumber }, accessTokenSecret, {expiresIn: accessTokenLifetime});
+      const refreshToken = jwt.sign({ completePhoneNumber}, refreshTokenSecret, {expiresIn: refreshTokenLifetime});
+
+      var response = {
+        status: 'authenticated',
+        phone: completePhoneNumber,
+        accessToken: accessToken,
+        refreshToken: refreshToken
+      };
+
+      //refreshTokens[refreshToken] = response; 
+
+      var newRefreshToken = new RefreshToken(response);
+
+      newRefreshToken.save(function (err, data) {
+        if(err) {
+          logger.info(err); 
+          return res.status(500).json(err);
+        } else {
+          logger.info('New refresh token successfully saved');
+          logger.info(data);
+          return res.status(200).json(response);
+        }
+      });   
     }
   });
-  
+};
+
+/**
+ * Create unverified draft user 
+ *
+ */
+exports.createDraftUser = function (req, res) { 
+  const newUserPhoneInfo = req.body.phoneDetails;
+  logger.info(newUserPhoneInfo);
+
+  var completePhoneNumber = newUserPhoneInfo.countryCallingCode + newUserPhoneInfo.phone;
+  var generatedID = uuid.v4();
+
+  var newUser = new User({
+    phone: completePhoneNumber,
+    userid: generatedID,
+    nationalPhoneNumber: newUserPhoneInfo.phone,
+    countryCallingCode: newUserPhoneInfo.countryCallingCode,
+    phoneIsValidNumber: String(newUserPhoneInfo.valid),
+    phoneVerificationStatus: 'unverified',
+    country: newUserPhoneInfo.country
+  });
+
+  newUser.save(function (err, data) {
+    if(err) { 
+      return logger.info(err); 
+    } else {
+      logger.info('New user successfully saved');
+      logger.info('API response:');
+      logger.info(data);
+
+      const accessToken = jwt.sign({ completePhoneNumber }, accessTokenSecret, {expiresIn: accessTokenLifetime});
+      const refreshToken = jwt.sign({ completePhoneNumber}, refreshTokenSecret, {expiresIn: refreshTokenLifetime});
+
+      var response = {
+        status: 'authenticated',
+        phone: completePhoneNumber,
+        accessToken: accessToken,
+        refreshToken: refreshToken
+      };
+
+      //refreshTokens[refreshToken] = response; 
+
+      var newRefreshToken = new RefreshToken(response);
+
+      newRefreshToken.save(function (err, data) {
+        if(err) {
+          logger.info(err); 
+          return res.status(500).json(err);
+        } else {
+          logger.info('New refresh token successfully saved');
+          logger.info(data);
+          return res.status(200).json(response);
+        }
+      });   
+    }
+  });
+
   // // Code below is reference on how to interact with DynamoDB without dynamoose
   //
   // const params = {
@@ -134,22 +221,6 @@ exports.createNewUser = function (req, res, verificationStatus) {
 };
 
 /**
- * Create new user with validated phone number
- *
- */
-exports.createValidatedUser = function (req, res) {
-  return this.createNewUser(req, res,'verified');
-};
-
-/**
- * Create unverified draft user 
- *
- */
-exports.createDraftUser = function (req, res) { 
-  return this.createNewUser(req, res,'unverified');
-};
-
-/**
  * Read user via phone information
  *
  */
@@ -163,10 +234,16 @@ exports.readUser = function (req, res) {
         logger.info('Error while getting user: ' + err);
       } else {
         logger.info('Query completed ');
-        logger.info('API response:');
-        logger.info(queryResult);
-        res.status(200).send(queryResult);
-        return queryResult;
+        if(queryResult == null){
+          logger.info('No user record found with given details');
+          res.send(404);
+        } else {
+          logger.info('API response:');
+          logger.info(queryResult);
+          res.status(200).send(queryResult);
+          return queryResult;
+        }
+        
       }
     });
 
@@ -196,30 +273,37 @@ exports.readUser = function (req, res) {
 exports.updateUserSettings = function (req, res) {
   var phoneInfo = req.body.phoneDetails;
   var settingsInfo = req.body.settings;
-  logger.info('Retrieving user to update: ' + phoneInfo.countryCallingCode + phoneInfo.phone);
-  User.get(phoneInfo.countryCallingCode + phoneInfo.phone, // this is the table key 
+  var completePhoneNumber = phoneInfo.countryCallingCode + phoneInfo.phone;
+  logger.info('Retrieving user to update: ' + completePhoneNumber);
+  User.get(completePhoneNumber, // this is the table key 
     function (err, queryResult) {
       if(err){
         logger.info('Error while getting user: ' + err);
       } else {
-        logger.info('Retrieval successful: ');
-        logger.info(queryResult);
+        logger.info('Query completed ');
+        if(queryResult == null){
+          logger.info('No user record found with given details');
+          res.send(404);
+        } else {
+          logger.info('Retrieval successful: ');
+          logger.info(queryResult);
 
-        logger.info('Proceeding to update with the following settings: ');
-        logger.info(settingsInfo);
+          logger.info('Proceeding to update with the following settings: ');
+          logger.info(settingsInfo);
 
-        queryResult.displayName = settingsInfo.displayName;
-        queryResult.save(function (err, data) {
-          if(err) { 
-            return logger.info(err); 
-          } else {
-            logger.info('User updated succesfully');
-            logger.info('API response:');
-            logger.info(data);
-            res.status(200).send(data);
-            return data;
-          }
-        });
+          queryResult.displayName = settingsInfo.displayName;
+          queryResult.save(function (err, data) {
+            if(err) { 
+              return logger.info(err); 
+            } else {
+              logger.info('User updated succesfully');
+              logger.info('API response:');
+              logger.info(data);
+              res.status(200).send(data);
+              return data;
+            }
+          });
+        }     
       }
     });
 
@@ -245,3 +329,87 @@ exports.updateUserSettings = function (req, res) {
   // });
 };
 
+// TOKEN INFRASTRUCTURE
+
+var refreshTokenSchema = new dynamoose.Schema({
+  refreshToken: {
+    type: String,
+    hashKey: true
+  },
+  accessToken: String,
+  phone: String,
+  status: String
+});
+
+var RefreshToken = dynamoose.model('RefreshToken', refreshTokenSchema);
+
+
+/**
+ * Check the validity of a refresh token
+ *
+ */
+exports.checkRefreshToken = function (req, res) {
+  var phoneInfo = req.body.phoneDetails;
+  var refreshToken = req.body.refreshToken;
+  var completePhoneNumber = phoneInfo.countryCallingCode + phoneInfo.phone;
+
+  logger.info('Checking db for refresh token associated with: ' + completePhoneNumber);
+  RefreshToken.get(refreshToken, // this is the table key 
+    function (err, queryResult) {
+      if(err){
+        logger.info('Error while getting refresh token: ' + err);
+      } else {
+        logger.info('Refresh token retrieved successfully: ');
+        logger.info(queryResult);
+
+        if(queryResult != null) {
+          if(queryResult.phone == completePhoneNumber){
+            logger.info('Number matches, proceeding to renew the refresh token: ');
+            const newAccessToken = jwt.sign({ phone: completePhoneNumber }, accessTokenSecret, {expiresIn: accessTokenLifetime});
+            queryResult.accessToken = newAccessToken;
+            queryResult.save(function (err, data) {
+              if(err) { 
+                logger.info('Save failed, unable to update refresh token'); 
+                logger.info(err); 
+                return res.status(401).send(err);
+              } else {
+                logger.info('Refresh token updated succesfully');
+                logger.info('API response:');
+                logger.info(data);
+                return res.status(200).send(newAccessToken);
+              }
+            });
+          }
+        }
+        else {
+          logger.info('No refresh token record found with given details');
+          res.send(404);
+        }
+      }
+    });
+  
+  // if( (refreshToken in refreshTokens) && refreshTokens[refreshToken].phone == completePhoneNumber ) {
+  //   const newAccessToken = jwt.sign({ phone: completePhoneNumber }, accessTokenSecret, {expiresIn: accessTokenLifetime});
+  //   refreshTokens[refreshToken].token = newAccessToken;
+  //   res.json({token: newAccessToken});
+  // } else {
+  //   res.send(401);
+  // }
+};
+
+/**
+ * Revoke a refresh token
+ *
+ */
+exports.revokeRefreshToken = function (req, res) {
+  var refreshToken = req.body.refreshToken;
+  logger.info('Received revoke request for refresh token');
+  RefreshToken.delete(refreshToken, function(err){
+    if(err){
+      return res.status(500).json(err);
+    } else {
+      logger.info('Refresh token revoked succesfully');
+      return res.send(204);
+    }
+  });
+};
