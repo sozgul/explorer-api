@@ -1,7 +1,13 @@
 const {logger} = require('./logger');
 const AWS = require('aws-sdk');
-var uuid = require('uuid');
-var dynamoose = require('dynamoose');
+const uuid = require('uuid');
+const dynamoose = require('dynamoose');
+const jwt = require('jsonwebtoken');
+const accessTokenSecret = 'SUPER_SECRET_ACCESS_KEY'; //normally stored in process.env.secret
+const refreshTokenSecret = 'SUPER_SECRET_REFRESH_KEY'; //normally stored in process.env.secret
+const accessTokenLifetime = 300;
+const refreshTokenLifetime = 604800;
+var refreshTokens = {}; 
 
 /* Dynamoose Configuration */
 dynamoose.setDefaults({
@@ -65,22 +71,23 @@ var userSchema = new dynamoose.Schema({
 
 var User = dynamoose.model('User', userSchema);
 
+
 /**
- * Create new user 
+ * Create new user with validated phone number
  *
  */
-exports.createNewUser = function (req, res, verificationStatus) {
-  var phoneInfo = req.body.phoneDetails;
-  const newUserPhoneInfo = phoneInfo;
-  logger.info(phoneInfo);
+exports.createValidatedUser = function (req, res) {
+  const newUserPhoneInfo = req.body.phoneDetails;
+  logger.info(newUserPhoneInfo);
+  var completePhoneNumber = newUserPhoneInfo.countryCallingCode + newUserPhoneInfo.phone;
 
   var newUser = new User({
-    phone: newUserPhoneInfo.countryCallingCode + newUserPhoneInfo.phone,
+    phone: completePhoneNumber,
     userid: uuid.v4(),
     nationalPhoneNumber: newUserPhoneInfo.phone,
     countryCallingCode: newUserPhoneInfo.countryCallingCode,
     phoneIsValidNumber: String(newUserPhoneInfo.valid),
-    phoneVerificationStatus: verificationStatus,
+    phoneVerificationStatus: 'unverified',
     country: newUserPhoneInfo.country
   });
 
@@ -91,11 +98,69 @@ exports.createNewUser = function (req, res, verificationStatus) {
       logger.info('New user successfully saved');
       logger.info('API response:');
       logger.info(data);
-      res.status(200).json(data);
-      return data;
+      
+      const accessToken = jwt.sign({ completePhoneNumber }, accessTokenSecret, {expiresIn: accessTokenLifetime});
+      const refreshToken = jwt.sign({ completePhoneNumber}, refreshTokenSecret, {expiresIn: refreshTokenLifetime});
+
+      var response = {
+        'status': 'authenticated',
+        'phone': completePhoneNumber,
+        'token': accessToken,
+        'refreshToken': refreshToken
+      };
+
+      refreshTokens[refreshToken] = response; 
+
+      return res.status(200).json(response);
     }
   });
-  
+};
+
+/**
+ * Create unverified draft user 
+ *
+ */
+exports.createDraftUser = function (req, res) { 
+  const newUserPhoneInfo = req.body.phoneDetails;
+  logger.info(newUserPhoneInfo);
+
+  var completePhoneNumber = newUserPhoneInfo.countryCallingCode + newUserPhoneInfo.phone;
+  var generatedID = uuid.v4();
+
+  var newUser = new User({
+    phone: completePhoneNumber,
+    userid: generatedID,
+    nationalPhoneNumber: newUserPhoneInfo.phone,
+    countryCallingCode: newUserPhoneInfo.countryCallingCode,
+    phoneIsValidNumber: String(newUserPhoneInfo.valid),
+    phoneVerificationStatus: 'unverified',
+    country: newUserPhoneInfo.country
+  });
+
+  newUser.save(function (err, data) {
+    if(err) { 
+      return logger.info(err); 
+    } else {
+      logger.info('New user successfully saved');
+      logger.info('API response:');
+      logger.info(data);
+
+      const accessToken = jwt.sign({ completePhoneNumber }, accessTokenSecret, {expiresIn: accessTokenLifetime});
+      const refreshToken = jwt.sign({ completePhoneNumber}, refreshTokenSecret, {expiresIn: refreshTokenLifetime});
+
+      var response = {
+        'status': 'authenticated',
+        'phone': completePhoneNumber,
+        'token': accessToken,
+        'refreshToken': refreshToken
+      };
+
+      refreshTokens[refreshToken] = response; 
+
+      return res.status(200).json(response);
+    }
+  });
+
   // // Code below is reference on how to interact with DynamoDB without dynamoose
   //
   // const params = {
@@ -131,22 +196,6 @@ exports.createNewUser = function (req, res, verificationStatus) {
   //     logger.info('PutItem succeeded: ' + '\n' + JSON.stringify(data, undefined, 2));
   //   }
   // });
-};
-
-/**
- * Create new user with validated phone number
- *
- */
-exports.createValidatedUser = function (req, res) {
-  return this.createNewUser(req, res,'verified');
-};
-
-/**
- * Create unverified draft user 
- *
- */
-exports.createDraftUser = function (req, res) { 
-  return this.createNewUser(req, res,'unverified');
 };
 
 /**
@@ -196,8 +245,9 @@ exports.readUser = function (req, res) {
 exports.updateUserSettings = function (req, res) {
   var phoneInfo = req.body.phoneDetails;
   var settingsInfo = req.body.settings;
-  logger.info('Retrieving user to update: ' + phoneInfo.countryCallingCode + phoneInfo.phone);
-  User.get(phoneInfo.countryCallingCode + phoneInfo.phone, // this is the table key 
+  var completePhoneNumber = phoneInfo.countryCallingCode + phoneInfo.phone;
+  logger.info('Retrieving user to update: ' + completePhoneNumber);
+  User.get(completePhoneNumber, // this is the table key 
     function (err, queryResult) {
       if(err){
         logger.info('Error while getting user: ' + err);
@@ -243,5 +293,54 @@ exports.updateUserSettings = function (req, res) {
   //     logger.info('UpdateItem succeeded: ' + '\n' + JSON.stringify(data, undefined, 2));
   //   }
   // });
+};
+
+// TOKEN INFRASTRUCTURE
+
+// var tokenSchema = new dynamoose.Schema({
+//   phone: {
+//     type: String,
+//     hashKey: true
+//   },
+//   userid: String,
+//   country: String,
+//   nationalPhoneNumber: String,
+//   countryCallingCode: String,
+//   phoneIsValidNumber: String,
+//   phoneVerificationStatus: String,
+//   displayName: String
+// });
+
+// var Token = dynamoose.model('User', tokenSchema);
+
+
+/**
+ * Check the validity of a refresh token
+ *
+ */
+exports.checkRefreshToken = function (req, res) {
+  var phoneInfo = req.body.phoneDetails;
+  var refreshToken = req.body.refreshToken;
+  var completePhoneNumber = phoneInfo.countryCallingCode + phoneInfo.phone;
+  
+  if( (refreshToken in refreshTokens) && refreshTokens[refreshToken].phone == completePhoneNumber ) {
+    const newAccessToken = jwt.sign({ phone: completePhoneNumber }, accessTokenSecret, {expiresIn: accessTokenLifetime});
+    refreshTokens[refreshToken].token = newAccessToken;
+    res.json({token: newAccessToken});
+  } else {
+    res.send(401);
+  }
+};
+
+/**
+ * Revoke a refresh token
+ *
+ */
+exports.revokeRefreshToken = function (req, res) {
+  var refreshToken = req.body.refreshToken;
+  if(refreshToken in refreshTokens) { 
+    delete refreshTokens[refreshToken];
+  } 
+  res.send(204);
 };
 

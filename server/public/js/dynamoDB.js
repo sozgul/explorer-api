@@ -1,5 +1,5 @@
 
-/* global AWS, document, parsePhoneNumber, parseDisplayName */
+/* global AWS, document */
 
 AWS.config.update({
   region: 'us-east-1',
@@ -27,8 +27,8 @@ RoleArn: 'arn:aws:iam::123456789012:role/dynamocognito'
 */
 
 var dynamodb = new AWS.DynamoDB();
-var docClient = new AWS.DynamoDB.DocumentClient();
 
+// eslint-disable-next-line no-unused-vars
 function createUsersTable() {
   var params = {
     TableName : 'Users',
@@ -53,6 +53,7 @@ function createUsersTable() {
   });
 }
 
+// eslint-disable-next-line no-unused-vars
 function deleteUsersTable() {
   var params = {
     TableName : 'enterTableNameToDelete'
@@ -68,7 +69,7 @@ function deleteUsersTable() {
 }
 
 
-
+// eslint-disable-next-line no-unused-vars
 function listUsersTables() {
   var params = {};
   dynamodb.listTables(params, function(err, data) {
