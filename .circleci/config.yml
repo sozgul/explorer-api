@@ -53,6 +53,8 @@ jobs:
                 ENV_FILE=.env
                 echo "AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID" >> $ENV_FILE
                 echo "AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY" >> $ENV_FILE
+                echo "TWILIO_API_KEY=$TWILIO_API_KEY" >> $ENV_FILE
+                echo "NODE_ENV=$NODE_ENV" >> $ENV_FILE
         - run:
             name: Build Docker Container
             command: docker build -t explorer-api .
