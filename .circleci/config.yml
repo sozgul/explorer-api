@@ -1,26 +1,66 @@
-
 version: 2
+
 jobs:
   build:
     docker:
       - image: circleci/node:8
-
     working_directory: ~/explorer-api
 
     steps:
       - checkout
-
       - restore_cache:
           keys:
           - v1-dependencies-{{ checksum "package.json" }}
-          - v1-dependencies-
-
-      - run: npm install
-
+          - v1-dependencies-]
+      - run:
+          name: Install
+          command: npm install
       - save_cache:
           paths:
             - node_modules
           key: v1-dependencies-{{ checksum "package.json" }}
+      - run:
+          name: Lint
+          command: npm run lint
+      - run:
+          name: Unit Tests
+          command: npm run test
+      - persist_to_workspace:
+          root: ~/
+          paths:
+            - explorer-api
 
-      - run: npm run lint
-      - run: npm run test
+  deploy:
+      docker:
+        - image: circleci/node:8
+      working_directory: ~/explorer-api
+
+      steps:
+        - attach_workspace:
+            at: ~/
+        - run:
+            name: Install AWS CLI
+            command: sudo apt-get install python-dev build-essential python-pip && sudo pip install awscli
+        - run: cd ~/explorer-api
+        - run:
+            name: Prune dependencies
+            command: npm prune --production
+        - run:
+            name: Create Package
+            command: zip -r ~/explorer-api.zip * --exclude=.*
+        - run:
+            name: Deploy to S3
+            command: aws s3 cp ~/explorer-api.zip s3://explorer-deploy/explorer-api/explorer-api.zip
+
+workflows:
+  version: 2
+
+  build_and_deploy:
+    jobs:
+      - build
+      - deploy:
+          requires:
+            - build
+          filters:
+            branches:
+              only: master

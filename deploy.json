@@ -1,6 +1,0 @@
-[
-    {
-        "name": "explorer-api-staging-container",
-        "imageUri": "388916754927.dkr.ecr.us-west-1.amazonaws.com/explorer-docker-nodejs:latest"
-    }
-]

@@ -1,4 +1,3 @@
-
 const phoneReg = require('./lib/phoneVerification/phoneVerification')(process.env.TWILIO_API_KEY);
 const dynamoDB = require('./dynamoDB');
 const {logger} = require('./logger');
