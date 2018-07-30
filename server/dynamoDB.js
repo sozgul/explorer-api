@@ -18,23 +18,23 @@ dynamoose.setDefaults({
   suffix: ''
 });
 /* Comment out the line below for use in production */
-dynamoose.local('http://localhost:8000');
+//dynamoose.local('http://localhost:8000');
 
 /* AWS Configuration */
 AWS.config.update({
   region: 'us-east-1',
   // The endpoint should point to the local or remote computer where DynamoDB (downloadable) is running.
   /* Comment out the line below for use in production */
-  endpoint: 'http://localhost:8000',
+  //endpoint: 'http://localhost:8000',
   /* Comment out the line below for use in local development */
-  // endpoint: 'https://dynamodb.us-east-1.amazonaws.com',
+  endpoint: 'https://dynamodb.us-east-1.amazonaws.com'
   /*
     accessKeyId and secretAccessKey defaults can be used while using the downloadable version of DynamoDB. 
     For security reasons, do not store AWS Credentials in your files. Use Amazon Cognito instead.
     Comment out the credentials below for production use
   */
-  accessKeyId: 'fakeMyKeyId',
-  secretAccessKey: 'fakeSecretAccessKey'
+  //accessKeyId: 'fakeMyKeyId',
+  //secretAccessKey: 'fakeSecretAccessKey'
 });
 /*
    Uncomment the following code to configure Amazon Cognito and make sure to
