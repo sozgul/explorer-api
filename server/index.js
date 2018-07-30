@@ -1,5 +1,6 @@
 
-const PORT = 8001;
+const {parsed: config = {}} = require('dotenv').config();
+const PORT = config.NODE_ENV === 'production' ? 8000 : 8001;
 const api = require('./api');
 const {logger, expressLogger} = require('./logger');
 
