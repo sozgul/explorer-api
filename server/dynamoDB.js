@@ -56,17 +56,19 @@ RoleArn: 'arn:aws:iam::123456789012:role/dynamocognito'
  */
 
 var userSchema = new dynamoose.Schema({
-  phone: {
+  userid: {
     type: String,
     hashKey: true
   },
-  userid: String,
+  phone: String,
   country: String,
   nationalPhoneNumber: String,
   countryCallingCode: String,
   phoneIsValidNumber: String,
   phoneVerificationStatus: String,
   displayName: String
+}, {
+  timestamps: true
 });
 
 var User = dynamoose.model('User', userSchema);
@@ -83,8 +85,8 @@ exports.createValidatedUser = function (req, res) {
   var generatedID = uuid.v4();
 
   var newUser = new User({
-    phone: completePhoneNumber,
     userid: generatedID,
+    phone: completePhoneNumber,
     nationalPhoneNumber: newUserPhoneInfo.phone,
     countryCallingCode: newUserPhoneInfo.countryCallingCode,
     phoneIsValidNumber: String(newUserPhoneInfo.valid),
@@ -141,8 +143,8 @@ exports.createDraftUser = function (req, res) {
   var generatedID = uuid.v4();
 
   var newUser = new User({
-    phone: completePhoneNumber,
     userid: generatedID,
+    phone: completePhoneNumber,
     nationalPhoneNumber: newUserPhoneInfo.phone,
     countryCallingCode: newUserPhoneInfo.countryCallingCode,
     phoneIsValidNumber: String(newUserPhoneInfo.valid),
@@ -227,11 +229,11 @@ exports.createDraftUser = function (req, res) {
  * Read user via phone information
  *
  */
-exports.readUser = function (req, res) {
+exports.findUserWithPhone = function (req, res) {
   var phoneInfo = req.body.phoneDetails;
   logger.info('searching for : ' + phoneInfo.countryCallingCode + phoneInfo.phone);
 
-  User.get(phoneInfo.countryCallingCode + phoneInfo.phone, // this is the table key 
+  User.scan('phone').eq(phoneInfo.countryCallingCode + phoneInfo.phone).exec(
     function (err, queryResult) {
       if(err){
         logger.info('Error while getting user: ' + err);
@@ -278,7 +280,7 @@ exports.updateUserSettings = function (req, res) {
   var settingsInfo = req.body.settings;
   var completePhoneNumber = phoneInfo.countryCallingCode + phoneInfo.phone;
   logger.info('Retrieving user to update: ' + completePhoneNumber);
-  User.get(completePhoneNumber, // this is the table key 
+  User.scan('phone').eq(phoneInfo.countryCallingCode + phoneInfo.phone).exec(
     function (err, queryResult) {
       if(err){
         logger.info('Error while getting user: ' + err);
@@ -342,6 +344,8 @@ var refreshTokenSchema = new dynamoose.Schema({
   accessToken: String,
   phone: String,
   status: String
+}, {
+  timestamps: true
 });
 
 var RefreshToken = dynamoose.model('RefreshToken', refreshTokenSchema);

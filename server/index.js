@@ -1,5 +1,5 @@
 
-const PORT = 8001;
+const PORT = 8000;
 const api = require('./api');
 const {logger, expressLogger} = require('./logger');
 

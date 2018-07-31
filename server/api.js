@@ -27,7 +27,7 @@ api.post('/verify-token', (req, res) => {
 
 api.post('/search', function (req, res) {
   logger.info('Searching Users with phone details:');
-  dynamoDB.readUser(req, res);
+  dynamoDB.findUserWithPhone(req, res);
 });
 
 api.post('/settings', function (req, res) {
