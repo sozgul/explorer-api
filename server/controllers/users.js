@@ -35,7 +35,8 @@ exports.createValidatedUser = function (req, res) {
 
   newUser.save(function (err, data) {
     if(err) { 
-      return logger.info(err); 
+      logger.info(err); 
+      return res.status(500).json(err);
     } else {
       logger.info('New user successfully saved');
       logger.info('API response:');
@@ -219,7 +220,42 @@ exports.updateUserSettings = function (req, res) {
   var userid = req.body.userid;
   var phoneInfo = req.body.phoneDetails;
   
-  if(userid == null && phoneInfo != null){
+  if (userid != null ) {
+    logger.info('Retrieving user account to update: ' + userid);
+    User.get(userid, function (err, queryResult) {
+      if(err){
+        logger.info('Error while getting user: ' + err);
+      } else {
+        logger.info('Query completed ');
+        if(queryResult == null){
+          logger.info('No user record found with given details');
+          res.send(404);
+        } else {
+          logger.info('Retrieval successful: ');
+          logger.info(queryResult);
+
+          logger.info('Proceeding to update with the following settings: ');
+          logger.info(settingsInfo);
+
+          queryResult.displayName = settingsInfo.displayName;
+          queryResult.save(function (err, data) {
+            if(err) { 
+              logger.info(err);
+              res.status(500).send(err);
+            } else {
+              logger.info('User updated succesfully');
+              logger.info('API response:');
+              logger.info(data);
+              res.status(200).send(data);
+              return data;
+            }
+          });
+        }     
+      }
+    });
+  }
+
+  if( phoneInfo != null) {
     var completePhoneNumber = phoneInfo.countryCallingCode + phoneInfo.phone;
     logger.info('Retrieving associated user to update: ' + completePhoneNumber);
     User.scan('phone').eq(phoneInfo.countryCallingCode + phoneInfo.phone).exec(
@@ -243,7 +279,8 @@ exports.updateUserSettings = function (req, res) {
             scanResults[0].displayName = settingsInfo.displayName;
             scanResults[0].save(function (err, data) {
               if(err) { 
-                return logger.info(err); 
+                logger.info(err);
+                res.status(500).send(err);
               } else {
                 logger.info('User updated succesfully');
                 logger.info('API response:');
@@ -257,42 +294,12 @@ exports.updateUserSettings = function (req, res) {
         }  
       }
     );
-  } else {
-    logger.info('Retrieving user account to update: ' + userid);
-    User.get(userid, 
-      function (err, queryResult) {
-        if(err){
-          logger.info('Error while getting user: ' + err);
-        } else {
-          logger.info('Query completed ');
-          if(queryResult == null){
-            logger.info('No user record found with given details');
-            res.send(404);
-          } else {
-            logger.info('Retrieval successful: ');
-            logger.info(queryResult);
+  } 
 
-            logger.info('Proceeding to update with the following settings: ');
-            logger.info(settingsInfo);
-
-            queryResult.displayName = settingsInfo.displayName;
-            queryResult.save(function (err, data) {
-              if(err) { 
-                return logger.info(err); 
-              } else {
-                logger.info('User updated succesfully');
-                logger.info('API response:');
-                logger.info(data);
-                res.status(200).send(data);
-                return data;
-              }
-            });
-          }     
-        }
-      });
+  if (userid == null & phoneInfo == null){
+    logger.info('Retrieval unsuccesfull, necessary information not provided');
+    res.status(500).send('Necessary retrieval information not provided');
   }
-
-  
 
   // // Code below is reference on how to interact with DynamoDB without dynamoose
   //
