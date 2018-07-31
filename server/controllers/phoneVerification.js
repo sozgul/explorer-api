@@ -1,6 +1,6 @@
 const phoneReg = require('./../libs/phoneVerification/phoneVerification')(process.env.TWILIO_API_KEY);
-const dynamoDB = require('./../database');
 const {logger} = require('./../logger');
+const usersController = require('../controllers/users');
 
 /**
  * Register a phone
@@ -51,7 +51,7 @@ exports.verifyPhoneToken = function (req, res) {
         logger.info('Confirm phone success confirming code: ', response);
         if (response.success) {
           logger.info('Verification successful, proceeding to create user');
-          dynamoDB.createValidatedUser(req, res);
+          usersController.createValidatedUser(req, res);
         } else {
           res.status(401).json(err);
         }
