@@ -1,3 +1,4 @@
+
 version: 2
 
 jobs:
@@ -36,6 +37,7 @@ jobs:
       working_directory: ~/explorer-api
 
       steps:
+        - setup_remote_docker
         - attach_workspace:
             at: ~/
         - run:
@@ -46,11 +48,35 @@ jobs:
             name: Prune dependencies
             command: npm prune --production
         - run:
+            name: Copy Environment Variables
+            command: |
+                ENV_FILE=.env
+                echo "AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID" >> $ENV_FILE
+                echo "AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY" >> $ENV_FILE
+                echo "TWILIO_API_KEY=$TWILIO_API_KEY" >> $ENV_FILE
+                echo "NODE_ENV=$NODE_ENV" >> $ENV_FILE
+        - run:
+            name: Build Docker Container
+            command: docker build -t explorer-api .
+        - run:
+            name: Push Docker Image to ECR
+            command: |
+                DOCKER_IMAGE=explorer-api
+                AWS_REGION=us-east-1
+                AWS_ACCOUNT_ID=751958071466
+                DOCKER_TAG=latest
+                # Login to AWS
+                aws configure set region $AWS_REGION
+                $(aws ecr get-login --no-include-email)
+                # Tag and push docker image
+                docker tag $DOCKER_IMAGE:$DOCKER_TAG $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$DOCKER_IMAGE:$DOCKER_TAG
+                docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$DOCKER_IMAGE:$DOCKER_TAG
+        - run:
             name: Create Package
-            command: zip -r ~/explorer-api.zip * --exclude=.*
+            command: zip -r ~/explorer-api.zip *
         - run:
             name: Deploy to S3
-            command: aws s3 cp ~/explorer-api.zip s3://explorer-deploy/explorer-api/explorer-api.zip
+            command: aws s3 cp ~/explorer-api.zip s3://explorer-source/explorer-api/explorer-api.zip
 
 workflows:
   version: 2
