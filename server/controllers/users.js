@@ -42,8 +42,8 @@ exports.createValidatedUser = function (req, res) {
       logger.info('API response:');
       logger.info(data);
       
-      const accessToken = jwt.sign({ completePhoneNumber }, accessTokenSecret, {expiresIn: accessTokenLifetime});
-      const refreshToken = jwt.sign({ completePhoneNumber}, refreshTokenSecret, {expiresIn: refreshTokenLifetime});
+      const accessToken = jwt.sign({ userid: generatedID }, accessTokenSecret, {expiresIn: accessTokenLifetime});
+      const refreshToken = jwt.sign({ userid: generatedID}, refreshTokenSecret, {expiresIn: refreshTokenLifetime});
 
       var response = {
         status: 'authenticated',
@@ -100,8 +100,8 @@ exports.createDraftUser = function (req, res) {
       logger.info('API response:');
       logger.info(data);
 
-      const accessToken = jwt.sign({ completePhoneNumber }, accessTokenSecret, {expiresIn: accessTokenLifetime});
-      const refreshToken = jwt.sign({ completePhoneNumber}, refreshTokenSecret, {expiresIn: refreshTokenLifetime});
+      const accessToken = jwt.sign({ userid: generatedID }, accessTokenSecret, {expiresIn: accessTokenLifetime});
+      const refreshToken = jwt.sign({ userid: generatedID}, refreshTokenSecret, {expiresIn: refreshTokenLifetime});
 
       var response = {
         status: 'authenticated',
@@ -253,9 +253,7 @@ exports.updateUserSettings = function (req, res) {
         }     
       }
     });
-  }
-
-  if( phoneInfo != null) {
+  } else if( phoneInfo != null) {
     var completePhoneNumber = phoneInfo.countryCallingCode + phoneInfo.phone;
     logger.info('Retrieving associated user to update: ' + completePhoneNumber);
     User.scan('phone').eq(phoneInfo.countryCallingCode + phoneInfo.phone).exec(
@@ -294,9 +292,7 @@ exports.updateUserSettings = function (req, res) {
         }  
       }
     );
-  } 
-
-  if (userid == null & phoneInfo == null){
+  } else if (userid == null & phoneInfo == null){
     logger.info('Retrieval unsuccesfull, necessary information not provided');
     res.status(500).send('Necessary retrieval information not provided');
   }

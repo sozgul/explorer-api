@@ -7,6 +7,7 @@ var refreshTokenSchema = new dynamoose.Schema({
   },
   accessToken: String,
   phone: String,
+  userid: String,
   status: String
 }, {
   timestamps: true
