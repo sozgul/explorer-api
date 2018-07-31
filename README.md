@@ -146,6 +146,50 @@ phoneDetails: {
   displayName: "Some Name"
 }
 
+### Match phone's contacts to User accounts
+- URL: `/match-contacts`
+- Matches contacts on the user's device to user accounts in our DB.
+- Full phone number <CountryCode> + <NationalNumber> is used for lookup
+
+#### Incoming HTTP Post request should include the following variable in format
+
+{
+  contactDetailsList: [
+    {
+      contactId: "0a1b2-3c4c-d5e6-f7g8h9", 
+      phoneNumbers: [
+        {countryCallingCode: "1", phoneNumber: "5559876543"},
+        ...
+      ]
+    },
+    {
+      contactId: "9j8i7-h6g5-f4e3d-2c1b0a",
+      phoneNumbers: [
+        {countryCallingCode: "1", phoneNumber: "4089218019"},
+        {countryCallingCode: "1", phoneNumber: "4159712365"},
+        ...
+      ]
+    },
+    ...
+  ]
+}
+
+#### Response format
+
+{
+  contactDetailsList: [
+    {
+      contactId: "0a1b2-3c4c-d5e6-f7g8h9", 
+      userId: "5610cae5-c0dc-49d5-b500-d0a4f698e9bd"
+    },
+    {
+      contactId: "9j8i7-h6g5-f4e3d-2c1b0a",
+      userId: "b70d7e9b-ac0c-43e2-8713-420ba934bf16"
+    },
+    ...
+  ]
+}
+
 ### Update User Settings 
 - URL: `/settings`
 - Accepts either userid or phoneDetails to locate record to update

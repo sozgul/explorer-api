@@ -211,6 +211,57 @@ exports.findUserWithPhone = function (req, res) {
   // });  
 };
 
+exports.matchContactListToUserAccounts = function(req, res) {
+  const {contactDetailsList = []} = req.body;
+  const phoneNumberList = contactDetailsList.reduce((output, {phoneNumbers=[]}) => {
+    return output.concat(
+      phoneNumbers.map(({countryCallingCode, phoneNumber}) => `${countryCallingCode}${phoneNumber}`)
+    );
+  }, []);
+
+  logger.info('Scanning user accounts for phone numbers: ', phoneNumberList);
+
+  return User.scan('phone').in(phoneNumberList).exec()
+    .then(users => {
+      logger.info('Found users with matching phone numbers: ', users);
+
+      // Due to data integrity issue, we can have multiple users with the same phone
+      // number.  Deduping the accounts, and taking the one that was created most
+      // recently.  Once we have solved the data integrity problem, this code can 
+      // be removed.
+      const filteredUsers = users.reduce((filtered, user) => {
+        const {userid} = user;
+        const createdAt = (new Date(user.createdAt)).getTime();
+
+        if (!filtered[userid] || (createdAt > (new Date(filtered[userid].createdAt).getTime()))) {
+          filtered[userid] = user;
+        }
+        
+        return filtered;
+      }, {});
+   
+      const matchedContacts = contactDetailsList.reduce((output, contact) => {
+        const foundUser = Object.values(filteredUsers).find(user => {
+          const contactPhoneNumbers = contact.phoneNumbers.map(
+            ({countryCallingCode, phoneNumber}) => `${countryCallingCode}${phoneNumber}`
+          );
+          return contactPhoneNumbers.includes(user.phone);
+        });
+        
+        if (foundUser) {
+          output.push({userId: foundUser.userid, contactId: contact.contactId});
+        }
+        return output;
+      }, []);
+
+      logger.info('Matched contacts to users by phone numbers: ', matchedContacts);
+      res.status(200).send(matchedContacts);
+    }).catch(error => {
+      logger.error('Error occurred while finding users by phone: ', error);
+      res.status(500).send(error);
+    });
+};
+
 /**
  * Update user with given settings 
  *

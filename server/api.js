@@ -36,6 +36,11 @@ api.post('/search', function (req, res) {
   usersController.findUserWithPhone(req, res);
 });
 
+api.post('/match-contacts', function(req, res) {
+  logger.info('Matching contacts from user\'s device to :');
+  usersController.matchContactListToUserAccounts(req, res);
+});
+
 api.post('/settings', function (req, res) {
   logger.info('Updating user with received settings:');
   usersController.updateUserSettings(req, res);
