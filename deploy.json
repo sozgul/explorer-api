@@ -1,0 +1,6 @@
+[
+  {
+      "name": "explorer-api-container",
+      "imageUri": "751958071466.dkr.ecr.us-east-1.amazonaws.com/explorer-api:latest"
+  }
+]
