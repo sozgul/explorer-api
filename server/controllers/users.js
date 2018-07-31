@@ -127,42 +127,6 @@ exports.createDraftUser = function (req, res) {
       });   
     }
   });
-
-  // // Code below is reference on how to interact with DynamoDB without dynamoose
-  //
-  // const params = {
-  //   TableName :'Users',
-  //   Item:{
-  //     'userid': {
-  //       S: 'U-' + uuid.v4()
-  //     },
-  //     'nationalNumber': {
-  //       S: newUserPhoneInfo.phone
-  //     },
-  //     'phoneCountryCode': {
-  //       S: newUserPhoneInfo.countryCallingCode
-  //     },
-  //     'phone': {
-  //       S: newUserPhoneInfo.countryCallingCode + newUserPhoneInfo.phone
-  //     },
-  //     'phoneIsValidNumber': {
-  //       S: String(newUserPhoneInfo.valid)
-  //     },
-  //     'phoneVerificationStatus': {
-  //       S: verificationStatus
-  //     },
-  //     'country': {
-  //       S: newUserPhoneInfo.country
-  //     }
-  //   }
-  // };
-  // dynamodb.putItem(params, function(err, data) {
-  //   if (err) {
-  //     logger.info('Unable to add item: ' + '\n' + JSON.stringify(err, undefined, 2));
-  //   } else {
-  //     logger.info('PutItem succeeded: ' + '\n' + JSON.stringify(data, undefined, 2));
-  //   }
-  // });
 };
 
 /**
@@ -191,24 +155,6 @@ exports.findUserWithPhone = function (req, res) {
         
       }
     });
-
-  // // Code below is reference on how to interact with DynamoDB without dynamoose
-  //
-  // const params = {
-  //   TableName :'Users',
-  //   Key:{
-  //     'phone': {
-  //       S: phoneInfo.countryCallingCode + phoneInfo.phone
-  //     }
-  //   }
-  // };
-  // dynamodb.getItem(params, function(err, data) {
-  //   if (err) {
-  //     logger.info('Unable to get item: ' + '\n' + JSON.stringify(err, undefined, 2));
-  //   } else {
-  //     logger.info('Get item succeeded: ' + '\n' + JSON.stringify(data, undefined, 2));
-  //   }
-  // });  
 };
 
 /**
@@ -296,26 +242,5 @@ exports.updateUserSettings = function (req, res) {
     logger.info('Retrieval unsuccesfull, necessary information not provided');
     res.status(500).send('Necessary retrieval information not provided');
   }
-
-  // // Code below is reference on how to interact with DynamoDB without dynamoose
-  //
-  // const params = {
-  //   TableName :'Users',
-  //   Key:{
-  //     'phone': { S: phoneInfo.countryCallingCode + phoneInfo.phone}
-  //   },
-  //   UpdateExpression: 'set displayName = :dN',
-  //   ExpressionAttributeValues:{
-  //     ':dN': { S: settingsInfo.displayName }
-  //   },
-  //   ReturnValues: 'UPDATED_NEW'
-  // };
-  // dynamodb.updateItem(params, function(err, data) {
-  //   if (err) {
-  //     logger.info('Unable to update item: ' + '\n' + JSON.stringify(err, undefined, 2));
-  //   } else {
-  //     logger.info('UpdateItem succeeded: ' + '\n' + JSON.stringify(data, undefined, 2));
-  //   }
-  // });
 };
 
