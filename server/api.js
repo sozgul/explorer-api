@@ -8,11 +8,9 @@ const {logger} = require('./logger');
 const phoneVerificationController = require('./controllers/phoneVerification');
 const usersController = require('./controllers/users');
 const refreshTokensController = require('./controllers/refreshTokens');
-
-
-//passport stuff
 const passport = require('passport');
-const jwtStrategy  = require('./lib/passport/strategies/jwt');
+const jwtStrategy  = require('./libs/passport/strategies/jwt');
+
 passport.use(jwtStrategy);
 
 api.use(bodyParser.json());                           // to support JSON-encoded bodies
