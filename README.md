@@ -132,6 +132,7 @@ phoneDetails: {
   valid : true
 }
 
+
 #### Response format
 
 {
@@ -147,9 +148,18 @@ phoneDetails: {
 
 ### Update User Settings 
 - URL: `/settings`
+- Accepts either userid or phoneDetails to locate record to update
+- One is enough, if both present it will use userid
 - Currently updates only display name
 
 #### Incoming HTTP Post request should include the following variable in format
+
+userid: "5610cae5-c0dc-49d5-b500-d0a4f698e9bd",
+settings: {
+  displayName: "New Display Name"
+}
+
+or
 
 phoneDetails: {
   carrierCode : undefined,
@@ -175,4 +185,88 @@ settings: {
   phoneVerificationStatus: "verified", 
   country: "US",
   displayName: "New Display Name"
+}
+
+### Check Refresh Token 
+- URL: `/token`
+- Requires refreshToken and userid to check validity
+- If refresh token is valid, grants new access token and updates refresh token record
+
+#### Incoming HTTP Post request should include the following variable in format
+
+{
+	"userid": "b70d7e9b-ac0c-43e2-8713-420ba934bf16",
+	"refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyaWQiOiJiNzBkN2U5Yi1hYzBjLTQzZTItODcxMy00MjBiYTkzNGJmMTYiLCJpYXQiOjE1MzMwMDg5OTQsImV4cCI6MTUzMzYxMzc5NH0.-vaZvkVXp7AsV8cY2NJ0NSSKBpUiGOeyvKVmPoO4Vnk"
+}
+
+#### Response format
+
+(returns naked token)
+
+eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyaWQiOiJiNzBkN2U5Yi1hYzBjLTQzZTItODcxMy00MjBiYTkzNGJmMTYiLCJpYXQiOjE1MzMwMDkwMjAsImV4cCI6MTUzMzAwOTMyMH0.FrI-RjErXkN12BOU1Rdy-JmBSoQJBlLclSbmRd289BY
+
+### Check Refresh Token 
+- URL: `/token/reject`
+- Requires only refresh token 
+- If found deletes from record to invalidate token
+
+#### Incoming HTTP Post request should include the following variable in format
+
+{
+	"refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyaWQiOiI3YjhjMTQ1Yy0xNTk3LTQzZWUtODg3MC1lMTEyMDQ3YjNkMWMiLCJpYXQiOjE1MzMwMDk0ODcsImV4cCI6MTUzMzAwOTc4N30.gkU-DCPRvO6vLWHZL9-4wCVfLF6C8OO8-Zoy6X1TFOY"
+}
+
+#### Response format
+
+Returns either error message or successful removal confirmation: "Refresh token revoked succesfully"
+
+
+### Create Shared Map 
+- URL: `/map`
+- Requires a creatorID, subject title and a list of participants 
+- Participants are referenced by userid and also have a role attached
+
+#### Incoming HTTP Post request should include the following variable in format
+
+{
+	"creatorID": "2e91491e-a5ca-4def-ae0f-2d1e4186553a",
+	"subject": "Sample Shared Map",
+	"participants": [
+		{
+			"participantID": "2e91491e-a5ca-4def-ae0f-2d1e4186553a",
+			"role": "admin"
+		},
+		{
+			"participantID": "f7152483-f147-451e-9af6-833eb8e121e7",
+			"role": "member"
+		},
+		{
+			"participantID": "db734f3a-28ac-40b8-a710-de3f7fdc3a2b",
+			"role": "member"
+		}
+	]
+}
+
+#### Response format
+
+{
+    "mapid": "d935a328-dd9c-4818-b7c1-b6af26e204b8",
+    "creatorID": "2e91491e-a5ca-4def-ae0f-2d1e4186553a",
+    "subject": "Test Map",
+    "participants": [
+        {
+            "participantID": "2e91491e-a5ca-4def-ae0f-2d1e4186553a",
+            "role": "admin"
+        },
+        {
+            "participantID": "f7152483-f147-451e-9af6-833eb8e121e7",
+            "role": "member"
+        },
+        {
+            "participantID": "db734f3a-28ac-40b8-a710-de3f7fdc3a2b",
+            "role": "member"
+        }
+    ],
+    "createdAt": "2018-07-31T03:29:35.221Z",
+    "updatedAt": "2018-07-31T03:29:35.221Z"
 }

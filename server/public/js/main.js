@@ -154,7 +154,7 @@ function createDraftUser(){
 
 
 // eslint-disable-next-line no-unused-vars
-function readUser(){
+function findUserWithPhone(){
   console.log('### INPUT PHONE INFORMATION ###');
   var parsedPhoneNumber = libphonenumber.parseNumber('+' + countryPhoneCode + ' ' + phoneNumber.value, {extended: 'true'});
   console.log(parsedPhoneNumber);
