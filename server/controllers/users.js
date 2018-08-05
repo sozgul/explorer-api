@@ -83,9 +83,34 @@ exports.createNewUser = function (req, res, accountVerificationStatus) {
           });
       
         } else if (scanResults.length > 0) {
-          const errorMessage = 'Phone number already registered, cannot create user';
-          logger.info(errorMessage);
-          return res.status(401).json({message: errorMessage});
+          logger.info('Found existing user with that phone number. Generating credentials for existing user.');
+          const existingUser = scanResults[scanResults.length - 1];
+
+          const accessToken = jwt.sign({ userid: existingUser.userid }, accessTokenSecret, {expiresIn: accessTokenLifetime});
+          const refreshToken = jwt.sign({ userid: existingUser.userid}, refreshTokenSecret, {expiresIn: refreshTokenLifetime});
+
+          var response = {
+            status: 'authenticated',
+            phone: completePhoneNumber,
+            accessToken: accessToken,
+            refreshToken: refreshToken,
+            userid: existingUser.userid
+          };
+
+          (new RefreshToken(response)).save(function (err, data) {
+            if(err) {
+              logger.info(err);
+              return res.status(500).json(err);
+            } else {
+              logger.info('New refresh token for existing user successfully saved.');
+              logger.info(data);
+              // 208 => 'Already reported' => this means that there is 
+              // this resource was already created.  
+              // Using this to get a successful status code that represents
+              // our use-case.
+              return res.status(208).json(response);
+            }
+          });
         }
       }
     });
