@@ -83,8 +83,9 @@ exports.createNewUser = function (req, res, accountVerificationStatus) {
           });
       
         } else if (scanResults.length > 0) {
-          logger.info('Phone number already registered, cannot create user');
-          res.send(401);
+          const errorMessage = 'Phone number already registered, cannot create user';
+          logger.info(errorMessage);
+          return res.status(401).json({message: errorMessage});
         }
       }
     });
