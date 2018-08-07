@@ -16,6 +16,7 @@ passport.use(jwtStrategy);
 
 api.use(bodyParser.json());                           // to support JSON-encoded bodies
 api.use(bodyParser.urlencoded({ extended: true }));   // to support URL-encoded bodies
+api.use(express.static(path.join(__dirname, 'public')));
 
 // Phone Verification Endpoints
 
@@ -75,7 +76,5 @@ api.post('/users', (req, res) => {
 api.get('/protected', passport.authenticate('jwt', { session: false }), (req, res) => {
   return res.status(200).send('YAY! this is a protected Route');
 });
-
-api.use(express.static(path.join(__dirname, 'public')));
 
 module.exports = api;
